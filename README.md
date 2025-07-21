@@ -4,6 +4,18 @@ This repository contains a complete implementation of a **Three-Tier Web Archite
 
 ---
 
+## 📖 About This Project
+
+This project demonstrates how to build a secure and scalable three-tier architecture on AWS using only the AWS Console. It includes:
+
+- Custom VPC, Subnets, NAT Gateway
+- Apache-based EC2 Web/App layers
+- MySQL RDS DB (private)
+- SSH bastion, internal-only DB access
+- Security group isolation per tier
+
+---
+
 ## 🧱 Phase 1: Foundation (Networking Basics)
 
 ### 1. VPC
