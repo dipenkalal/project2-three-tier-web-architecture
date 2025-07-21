@@ -8,26 +8,38 @@ This repository contains a complete implementation of a **Three-Tier Web Archite
 
 ### 1. VPC
 
-- Created a **custom VPC** (10.0.0.0/16)
+- **Name Tag**: `ThreeTier-VPC`
+- **CIDR Block**: `10.0.0.0/16`
+- **Tenancy**: Default
+- **IPv6**: Not enabled
+- **DNS Hostnames**: Enabled (for public DNS resolution)
 
 ### 2. Subnets
 
-- **Public Subnets**: 10.0.1.0/24 (AZ1), 10.0.2.0/24 (AZ2)
-- **Private Subnets**: 10.0.3.0/24 (AZ1), 10.0.4.0/24 (AZ2)
+| Tier     | AZ  | Subnet Name | CIDR Block  | Type    |
+| -------- | --- | ----------- | ----------- | ------- |
+| Web Tier | AZ1 | Web-Pub-1   | 10.0.1.0/24 | Public  |
+| Web Tier | AZ2 | Web-Pub-2   | 10.0.2.0/24 | Public  |
+| App Tier | AZ1 | App-Priv-1  | 10.0.3.0/24 | Private |
+| App Tier | AZ2 | App-Priv-2  | 10.0.4.0/24 | Private |
+| DB Tier  | AZ1 | DB-Priv-1   | 10.0.5.0/24 | Private |
+| DB Tier  | AZ2 | DB-Priv-2   | 10.0.6.0/24 | Private |
 
 ### 3. Internet Gateway (IGW)
 
+- **Name Tag**: `ThreeTier-IGW`
 - Created and attached to the custom VPC
-- Associated with a route table for public subnets
+- Associated with the route table for public subnets
 
 ### 4. Route Tables
 
-- **Public RT**: Routes 0.0.0.0/0 to IGW
-- **Private RT**: Routes 0.0.0.0/0 to NAT Gateway (for outbound internet access)
+- **Public RT (Public-RT)**: Routes `0.0.0.0/0` to IGW; associated with Web-Pub-1 and Web-Pub-2
+- **Private RT (Private-RT)**: Routes `0.0.0.0/0` to NAT Gateway; associated with App and DB subnets
 
 ### 5. NAT Gateway
 
-- Created in a public subnet
+- **Name Tag**: `NAT-GW-AZ1`
+- Created in public subnet `Web-Pub-1`
 - Attached Elastic IP for internet access
 
 ---
@@ -36,17 +48,22 @@ This repository contains a complete implementation of a **Three-Tier Web Archite
 
 ### 6. Security Groups
 
-- **Web SG**: Allows HTTP (80), SSH (22) from anywhere
-- **App SG**: Allows HTTP from Web SG only
-- **DB SG**: Allows MySQL (3306) from App SG only
+- **Web-SG**: Allows HTTP (80), SSH (22) from anywhere (0.0.0.0/0)
+- **App-SG**: Allows HTTP (80) only from Web-SG
+- **DB-SG**: Allows MySQL (3306) only from App-SG
+
+> These security groups were created with tier-based separation and used consistently across EC2 and RDS resources.
 
 ### 7. NACLs
 
-- Default NACLs used with inbound/outbound set to allow all (for simplicity)
+- No custom NACLs were created
+- Default NACLs were retained, which allow all inbound and outbound traffic
+- Snapshots of NACL configuration are documented for reference
 
 ### 8. Key Pair
 
-- Created a new key pair for SSH access to EC2 instances
+- Created key pair: `three-tier-keypair.pem`
+- Used for SSH access to both Web Tier and App Tier EC2 instances
 
 ---
 
@@ -54,19 +71,27 @@ This repository contains a complete implementation of a **Three-Tier Web Archite
 
 ### 9. EC2 Instances - Web Tier
 
-- Amazon Linux 2023
-- Installed Apache (`httpd`)
-- Deployed in **public subnet**
+- **Instance Count**: 1 (Single AZ)
+- **Name**: `Bastion-Host`
+- **OS**: Amazon Linux 2023
+- **Purpose**: Acts as both Web server and Bastion Host for accessing private EC2s
+- **Web Server**: Apache (`httpd`) installed
+- **Web Page**: Custom portfolio or HTML landing page deployed and served
+- **Subnet**: Deployed in public subnet `Web-Pub-1`
 
 ### 10. EC2 Instances - App Tier
 
-- Amazon Linux 2023
-- Installed Apache + PHP + `php-mysqlnd`
-- Deployed in **private subnet**
+- **Instance Count**: 1 (Single AZ)
+- **OS**: Amazon Linux 2023
+- **Software**: Apache + PHP + `php-mysqlnd` installed
+- **Script Used**: `db-test.php` (tested RDS connectivity)
+- **Access**: Deployed in private subnet `App-Priv-1` with no public IP
 
 ### 11. Load Balancers
 
-- **Skipped** in this implementation to simplify setup
+- Initially created **internet-facing ALB**, but later deleted
+- Recreated as an **internal ALB** for App Tier communication
+- [Note: ALB details skipped intentionally to simplify this project documentation]
 
 ---
 
@@ -74,9 +99,11 @@ This repository contains a complete implementation of a **Three-Tier Web Archite
 
 ### 12. RDS MySQL
 
-- Created **Amazon RDS** (MySQL 8.0)
-- Deployed in private subnets across 2 AZs
-- No public access, only accessible via App Tier SG
+- **RDS Name**: `dipen-db`
+- **Engine**: MySQL 8.0
+- **Multi-AZ Deployment**: Yes
+- **Subnet Group**: `db-subnet-group-p2` (includes DB-Priv-1 and DB-Priv-2)
+- **Access Control**: No public access; traffic restricted to App-SG only
 
 ### 13. DB Connection Test
 
@@ -99,6 +126,7 @@ echo "Connected successfully to RDS! Server time: " . date("Y-m-d H:i:s");
 
 - Tested using: `curl http://localhost/db-test.php`
 - Result: Successfully connected and printed server time
+- ✅ The App EC2 connects to RDS only through **private network** using private IP or internal endpoint. No internet/public connectivity involved. This ensures a strong layer of security and isolation.
 
 ---
 
@@ -109,6 +137,7 @@ echo "Connected successfully to RDS! Server time: " . date("Y-m-d H:i:s");
 - ✅ Browser → Web EC2 (Apache running)
 - ✅ Web EC2 → App EC2 (SSH confirmed)
 - ✅ App EC2 → RDS (private IP + endpoint tested)
+- ✅ RDS is only accessible from inside the VPC (no public access)
 
 ### 15. Monitoring & Logs
 
