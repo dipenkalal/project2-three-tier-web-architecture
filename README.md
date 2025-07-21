@@ -184,9 +184,4 @@ echo "Connected successfully to RDS! Server time: " . date("Y-m-d H:i:s");
 
 ---
 
-## 📞 Support / Contact
-
-Created by **Dipen Patel** for AWS Cloud Engineering learning.
-
----
 
