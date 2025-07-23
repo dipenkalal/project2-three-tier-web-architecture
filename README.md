@@ -300,27 +300,6 @@ view-employees.html ➔ AJAX GET to get-employees.php ➔ SELECT FROM RDS ➔ Re
 }
 ```
 
----
-
-## 🤔 Interview/Documentation Snippet
-
-> We implemented a basic Three-Tier architecture on AWS. The web tier hosts the frontend and PHP scripts, which interact with an RDS MySQL database using secure credentials. Data is inserted using a form and retrieved dynamically via API calls returning JSON. Apache on EC2 serves both the form and data views.
-
----
-
-## 👁️ Live Test URL (Replace with your Public IP)
-
-- Form: `http://<web-ec2-ip>/form.html`
-- View: `http://<web-ec2-ip>/view-employees.html`
-
----
-
-## 🙏 Credits
-
-- Built by Dipen Patel
-- Guided by AWS Cloud Engineering Architecture (Three-Tier Model)
-
----
 
 ## 🛡 Security Notes
 
