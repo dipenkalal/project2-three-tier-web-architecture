@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Employee Records</title>
+  <style>
+    body { font-family: Arial; background: #f2f2f2; padding: 20px; }
+    h2 { margin-bottom: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background: dodgerblue; color: white; }
+  </style>
+</head>
+<body>
+  <h2>Employee Records</h2>
+  <table id="employeeTable">
+    <thead>
+      <tr>
+        <th>Id</th><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Created At</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    fetch('get-employees.php')
+      .then(response => response.json())
+      .then(data => {
+        const table = document.querySelector("#employeeTable tbody");
+        if (data.length === 0) {
+          table.innerHTML = "<tr><td colspan='6'>No data available.</td></tr>";
+        } else {
+          data.forEach(emp => {
+            const row = `<tr>
+              <td>${emp.id}</td><td>${emp.name}</td><td>${emp.email}</td>
+              <td>${emp.role}</td><td>${emp.department}</td><td>${emp.created_at}</td>
+            </tr>`;
+            table.innerHTML += row;
+          });
+        }
+      })
+      .catch(error => {
+        document.querySelector("#employeeTable tbody").innerHTML = "<tr><td colspan='6'>Error fetching data. Check connection or backend logs.</td></tr>";
+      });
+  </script>
+</body>
+</html>
