@@ -177,15 +177,158 @@ echo "Connected successfully to RDS! Server time: " . date("Y-m-d H:i:s");
 
 ---
 
-## 📁 Folder Structure (If Uploading Scripts)
+**Architecture:**
 
-```bash
-.
-├── README.md
-├── scripts/
-│   └── db-test.php
+```
+User (Browser)
+   ⬇
+Web Tier (HTML/CSS/JS + PHP APIs)
+   ⬇
+App Tier (PHP logic + DB connector)
+   ⬇
+DB Tier (Amazon RDS MySQL)
 ```
 
+---
+
+## 🛠️ Technologies Used
+
+| Layer     | Technology                      |
+| --------- | ------------------------------- |
+| Web Tier  | EC2 (Amazon Linux 2023, Apache) |
+| App Tier  | PHP 8.1, MariaDB client         |
+| DB Tier   | Amazon RDS (MySQL 8.0)          |
+| Frontend  | HTML5, CSS3, JavaScript         |
+| Transport | HTTP via Apache                 |
+
+---
+
+## 🌐 Application Flow
+
+### 1. 🖋️ Submit Employee
+
+- `form.html`: Web form collects Name, Email, Role, Department
+- `submit-form.php`: Validates inputs and performs `INSERT INTO employees (...) VALUES (...)`
+
+### 2. 🔎 View Employees
+
+- `view-employees.html`: Fetches employee data using AJAX and populates an HTML table
+- `get-employees.php`: Fetches rows from the `employees` table in RDS and returns JSON
+
+---
+
+## 📝 Project File Structure
+
+```bash
+/var/www/html/
+├── form.html             # Web form to submit employee
+├── submit-form.php      # Handles DB insert logic
+├── view-employees.html  # Displays data using JS table
+└── get-employees.php    # Fetches data from RDS and returns JSON
+```
+
+---
+
+## 📊 Database Schema
+
+```sql
+CREATE TABLE employees (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255),
+  email VARCHAR(255),
+  role VARCHAR(100),
+  department VARCHAR(100),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## 🚀 Deployment Steps (Manual)
+
+### 1. Launch EC2 Instances
+
+- **Web Tier EC2**: Apache + PHP + frontend files
+- **App Tier EC2**: PHP CLI + MySQL client (optional testing)
+
+### 2. Create RDS Instance
+
+- Engine: MySQL
+- Enable public access if needed
+- Store hostname, username, and password
+
+### 3. Configure Security Groups
+
+- Allow HTTP (80) for Web Tier
+- Allow inbound MySQL (3306) only from App/Web Tier IPs
+
+### 4. Upload Files
+
+```bash
+scp *.php *.html ec2-user@<Web-EC2-Public-IP>:/var/www/html/
+```
+
+### 5. Grant File Permissions
+
+```bash
+sudo chown apache:apache /var/www/html/*.php
+sudo chmod 644 /var/www/html/*.php
+```
+
+---
+
+## 🔄 Data Flow Summary
+
+```text
+form.html ➔ POST to submit-form.php ➔ INSERT INTO RDS
+
+view-employees.html ➔ AJAX GET to get-employees.php ➔ SELECT FROM RDS ➔ Render Table
+```
+
+---
+
+## 📄 Sample Record
+
+```json
+{
+  "id": 1,
+  "name": "Dipen Patel",
+  "email": "dipen@example.com",
+  "role": "Cloud Engineer",
+  "department": "DevOps",
+  "created_at": "2025-07-23 04:34:32"
+}
+```
+
+---
+
+## 🤔 Interview/Documentation Snippet
+
+> We implemented a basic Three-Tier architecture on AWS. The web tier hosts the frontend and PHP scripts, which interact with an RDS MySQL database using secure credentials. Data is inserted using a form and retrieved dynamically via API calls returning JSON. Apache on EC2 serves both the form and data views.
+
+---
+
+## 👁️ Live Test URL (Replace with your Public IP)
+
+- Form: `http://<web-ec2-ip>/form.html`
+- View: `http://<web-ec2-ip>/view-employees.html`
+
+---
+
+## 🙏 Credits
+
+- Built by Dipen Patel
+- Guided by AWS Cloud Engineering Architecture (Three-Tier Model)
+
+---
+
+## 🛡 Security Notes
+
+- All DB credentials are stored in PHP only (no frontend exposure)
+- IAM not used here, but can be added for production
+- Limit inbound rules in SG to minimum necessary sources
+
+---
 ---
 
 ## 📌 Notes
